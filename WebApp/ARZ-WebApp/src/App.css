@@ -1,0 +1,13 @@
+.dev-ctrl {
+  border: solid 1px black;
+}
+
+.dev-ctrl._1 {
+  border: solid 1px red;
+}
+.dev-ctrl._2 {
+  border: solid 2px red;
+}
+.dev-ctrl._3 {
+  border: solid 2px black;
+}

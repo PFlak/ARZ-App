@@ -1,7 +1,7 @@
-import { ReactNode, useContext } from "react";
+import { ReactNode, useContext, useEffect } from "react";
 import { AuthContext } from "../AuthProvider/AuthProvider";
 import PropTypes from "prop-types";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 
 interface Props {
   children?: ReactNode;
@@ -9,6 +9,7 @@ interface Props {
 
 const PrivateRoute = ({ children }: Props) => {
   const context = useContext(AuthContext);
+  const navigate = useNavigate();
 
   if (context?.loading) {
     return <span className="loading loading-dots loading-lg"></span>;
@@ -18,7 +19,13 @@ const PrivateRoute = ({ children }: Props) => {
     return children;
   }
 
-  return <Navigate to="/login" />;
+  useEffect(() => {
+    const navigateToLogin = () => {
+      navigate("auth/login");
+    };
+
+    navigateToLogin();
+  });
 };
 
 export default PrivateRoute;
