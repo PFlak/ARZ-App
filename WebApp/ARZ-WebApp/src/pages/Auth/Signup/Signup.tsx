@@ -14,11 +14,9 @@ import {
   InputRightElement,
 } from "@chakra-ui/react";
 
-function Login() {
+function Signup() {
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
-
-  console.log(window.location.pathname);
 
   if (authContext?.loading) {
   }
@@ -37,7 +35,7 @@ function Login() {
     <>
       <Box flexGrow={[1, 2, 1]}>
         <Heading as="h1" color="blue.500">
-          Log In
+          Create Account
         </Heading>
       </Box>
 
@@ -86,7 +84,7 @@ function Login() {
           </InputGroup>
         </FormControl>
         <Button w="10rem" colorScheme="blue" variant="solid">
-          Log In
+          Create Account
         </Button>
       </Box>
 
@@ -118,10 +116,10 @@ function Login() {
           colorScheme="blue"
           variant="outline"
           onClick={() => {
-            navigate("/auth/signup");
+            navigate("/auth/login");
           }}
         >
-          Create Account
+          Log In
         </Button>
         <Divider display={["none", "block"]} orientation="vertical"></Divider>
         <Button w="10rem" colorScheme="blue" variant="solid">
@@ -132,4 +130,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Signup;
