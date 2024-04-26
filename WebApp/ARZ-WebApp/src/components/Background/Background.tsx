@@ -1,12 +1,16 @@
+import { Box } from "@chakra-ui/react";
+
 import "./Background.css";
 import WaveAnimation from "./WaveAnimation";
+import { useBackgroundBlurStore } from "../../hooks/useBackgroundBlurStore";
 
 const width = 500;
 const height = 500;
 
 function Background() {
+  const bgBlur = useBackgroundBlurStore();
   return (
-    <div className="svg-container">
+    <Box className="svg-container" backdropBlur={`${bgBlur}px`}>
       <svg
         className="svg-background"
         preserveAspectRatio="none"
@@ -21,7 +25,7 @@ function Background() {
           speed={5}
         ></WaveAnimation>
       </svg>
-    </div>
+    </Box>
   );
 }
 

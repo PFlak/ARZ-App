@@ -3,33 +3,117 @@ import { AuthContext } from "../../../components/AuthProvider/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import {
   AbsoluteCenter,
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
   Box,
   Button,
+  CircularProgress,
   Divider,
   FormControl,
+  FormHelperText,
   FormLabel,
   Heading,
   Input,
   InputGroup,
   InputRightElement,
+  useDisclosure,
 } from "@chakra-ui/react";
+import { UserCredential } from "firebase/auth";
 
 function Signup() {
+  const alert = useDisclosure({ defaultIsOpen: false });
+  const [alertDescription, setAlertDescribtion] = useState(
+    "Something went wrong"
+  );
+  const [alertType, setAlertType] = useState<"error" | "info" | "success">(
+    "error"
+  );
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
 
   if (authContext?.loading) {
+    return (
+      <Box>
+        <CircularProgress isIndeterminate color="blue.300" />
+      </Box>
+    );
   }
 
   if (authContext?.user) {
     navigate("/");
   }
 
-  const [show, setShow] = useState(false);
-  const showPassword = () => setShow(!show);
+  const createUnAuthorizedUser = async (userCredential: UserCredential) => {
+    if (userCredential.user.email) {
+      authContext
+        ?.createUnAuthorizedUser(
+          userCredential.user.uid,
+          userCredential.user.email
+        )
+        .then((value) => {
+          if (value) {
+            navigate("/");
+          }
+        })
+        .catch(() => {
+          setAlertType("error");
+          alert.onOpen();
+        })
+        .finally(() => {
+          authContext.skipLoading();
+        });
+    }
+  };
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const handleGoogleSubmit = async () => {
+    await authContext
+      ?.signInWithGoogle()
+      .then(async (result) => {
+        if (!result.user.emailVerified) {
+          authContext.sendVerificationEmail(result.user).then(() => {
+            authContext.logOut();
+            setAlertType("info");
+            setAlertDescribtion("Verification link was send to your email");
+            alert.onOpen();
+          });
+
+          return;
+        }
+
+        createUnAuthorizedUser(result);
+      })
+      .catch((error) => {
+        authContext.skipLoading();
+        setAlertDescribtion("Oops... something went wrong");
+        alert.onOpen();
+      });
+  };
+
+  const handleSignUpSubmit = async () => {
+    authContext
+      ?.createUser(email, password)
+      .then((result) => {
+        authContext.sendVerificationEmail(result.user).then(() => {
+          authContext.logOut();
+          setAlertType("info");
+          setAlertDescribtion("Verification link was send to your email");
+          alert.onOpen();
+        });
+        createUnAuthorizedUser(result);
+      })
+      .catch((error) => {
+        authContext.skipLoading();
+        setAlertDescribtion("User exists");
+        alert.onOpen();
+      });
+  };
 
   return (
     <>
@@ -40,11 +124,19 @@ function Signup() {
       </Box>
 
       <Box flexGrow={[1, 1, 1]}>
-        <Divider
-          w={["100%", "60%"]}
-          borderWidth="0.7px"
-          borderColor="gray.300"
-        ></Divider>
+        {alert.isOpen ? (
+          <Alert status={alertType}>
+            <AlertIcon></AlertIcon>
+            <AlertTitle></AlertTitle>
+            <AlertDescription>{alertDescription}</AlertDescription>
+          </Alert>
+        ) : (
+          <Divider
+            w={["100%", "60%"]}
+            borderWidth="0.7px"
+            borderColor="gray.300"
+          ></Divider>
+        )}
       </Box>
 
       <Box
@@ -72,18 +164,31 @@ function Signup() {
               isRequired
               borderColor="gray.300"
               pr="4.5rem"
-              type={show ? "text" : "password"}
+              type={showPassword ? "text" : "password"}
               placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;"
               onChange={(e) => setPassword(e.target.value)}
             ></Input>
             <InputRightElement width="4.5rem">
-              <Button h="1.75rem" size="sm" onClick={showPassword}>
-                {show ? "Hide" : "Show"}
+              <Button
+                h="1.75rem"
+                size="sm"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
               </Button>
             </InputRightElement>
           </InputGroup>
+          <FormHelperText>
+            Password must be at least 8 characters
+          </FormHelperText>
         </FormControl>
-        <Button w="10rem" colorScheme="blue" variant="solid">
+        <Button
+          w="10rem"
+          colorScheme="blue"
+          variant="solid"
+          onClick={handleSignUpSubmit}
+          isDisabled={email == "" || password.length < 8}
+        >
           Create Account
         </Button>
       </Box>
@@ -122,7 +227,12 @@ function Signup() {
           Log In
         </Button>
         <Divider display={["none", "block"]} orientation="vertical"></Divider>
-        <Button w="10rem" colorScheme="blue" variant="solid">
+        <Button
+          w="10rem"
+          colorScheme="blue"
+          variant="solid"
+          onClick={handleGoogleSubmit}
+        >
           Sign In with Google
         </Button>
       </Box>
